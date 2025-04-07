@@ -1,7 +1,3 @@
-@app.get("/")
-def read_root():
-    return {"message": "UX QA Tool is running"}
-
 from fastapi import FastAPI, File, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -16,8 +12,13 @@ from PIL import Image, ImageChops
 
 app = FastAPI()
 
-# Mount static file serving for screenshot previews
-app.mount("/", StaticFiles(directory="."), name="static")
+# ✅ Root route for Render test
+@app.get("/")
+def read_root():
+    return {"message": "UX QA Tool is running"}
+
+# Serve screenshots and diff images
+app.mount("/static", StaticFiles(directory="."), name="static")
 
 # Allow CORS for local dev
 app.add_middleware(
@@ -28,11 +29,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Load Figma API token securely
+# Load Figma API token
 FIGMA_TOKEN = os.getenv("FIGMA_TOKEN", "figd_jHWWTRa9WEGSQIaKvKgYSx3hyh8omAN6AtDWP_lL")
 
 # Fetch Figma file JSON
-
 def fetch_figma_file_data(file_key: str):
     headers = {"X-Figma-Token": FIGMA_TOKEN}
     url = f"https://api.figma.com/v1/files/{file_key}"
@@ -41,8 +41,3 @@ def fetch_figma_file_data(file_key: str):
         return response.json()
     else:
         return {"error": f"Figma API error {response.status_code}"}
-
-# Placeholder endpoint for health check
-@app.get("/")
-def read_root():
-    return {"message": "UX QA Tool is running"}
