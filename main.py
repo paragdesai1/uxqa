@@ -1,3 +1,7 @@
+@app.get("/")
+def read_root():
+    return {"message": "UX QA Tool is running"}
+
 from fastapi import FastAPI, File, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
