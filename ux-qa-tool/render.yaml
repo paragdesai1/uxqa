@@ -1,9 +1,0 @@
-services:
-  - type: web
-    name: ux-qa-tool
-    env: python
-    buildCommand: "pip install -r requirements.txt && playwright install --with-deps"
-    startCommand: "uvicorn main:app --host 0.0.0.0 --port 10000"
-    envVars:
-      - key: FIGMA_TOKEN
-        value: figd_jHWWTRa9WEGSQIaKvKgYSx3hyh8omAN6AtDWP_lL
