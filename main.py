@@ -9,18 +9,16 @@ import os
 import asyncio
 from playwright.async_api import async_playwright
 from PIL import Image, ImageChops
+import re
 
 app = FastAPI()
 
-# Root route for Render test
 @app.get("/")
 def read_root():
     return {"message": "UX QA Tool is running"}
 
-# Serve screenshots and diff images
 app.mount("/static", StaticFiles(directory="."), name="static")
 
-# Allow CORS for dev
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -30,6 +28,10 @@ app.add_middleware(
 )
 
 FIGMA_TOKEN = os.getenv("FIGMA_TOKEN", "figd_jHWWTRa9WEGSQIaKvKgYSx3hyh8omAN6AtDWP_lL")
+
+def extract_figma_file_key(url: str):
+    match = re.search(r"/(file|design)/([a-zA-Z0-9]+)", url)
+    return match.group(2) if match else None
 
 def fetch_figma_file_data(file_key: str):
     headers = {"X-Figma-Token": FIGMA_TOKEN}
@@ -143,7 +145,9 @@ async def compare(
     try:
         figma_data, figma_styles = {}, []
         if figmaUrl:
-            file_key = figmaUrl.split("/file/")[1].split("/")[0]
+            file_key = extract_figma_file_key(figmaUrl)
+            if not file_key:
+                return JSONResponse(status_code=400, content={"error": "Invalid Figma URL. Must include /file/{key} or /design/{key}"})
             figma_data = fetch_figma_file_data(file_key)
             figma_styles = extract_figma_styles(figma_data)
 
