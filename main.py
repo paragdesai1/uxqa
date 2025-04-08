@@ -140,37 +140,36 @@ async def compare(
     pageUrl: Optional[str] = Form(None),
     screenshot: Optional[UploadFile] = File(None),
 ):
-    figma_data, figma_styles = {}, []
-    if figmaUrl:
-        try:
+    try:
+        figma_data, figma_styles = {}, []
+        if figmaUrl:
             file_key = figmaUrl.split("/file/")[1].split("/")[0]
             figma_data = fetch_figma_file_data(file_key)
             figma_styles = extract_figma_styles(figma_data)
-        except Exception as e:
-            figma_data = {"error": str(e)}
 
-    dom_styles, live_shot_path = [], None
-    if pageUrl:
-        try:
+        dom_styles, live_shot_path = [], None
+        if pageUrl:
             live_shot_path, dom_styles = await capture_page_screenshot_and_styles(pageUrl)
-        except Exception as e:
-            print("Live page error:", str(e))
 
-    uploaded_path = None
-    if screenshot:
-        uploaded_path = f"uploaded_{screenshot.filename}"
-        with open(uploaded_path, "wb") as f:
-            f.write(await screenshot.read())
+        uploaded_path = None
+        if screenshot:
+            uploaded_path = f"uploaded_{screenshot.filename}"
+            with open(uploaded_path, "wb") as f:
+                f.write(await screenshot.read())
 
-    diff_path = compare_images(uploaded_path, live_shot_path) if uploaded_path and live_shot_path else None
-    font_diffs, color_diffs, spacing_diffs = compare_styles(figma_styles, dom_styles)
+        diff_path = compare_images(uploaded_path, live_shot_path) if uploaded_path and live_shot_path else None
+        font_diffs, color_diffs, spacing_diffs = compare_styles(figma_styles, dom_styles)
 
-    return JSONResponse(content={
-        "figma_data_preview": figma_data.get("name", "N/A"),
-        "page_screenshot": live_shot_path,
-        "uploaded_screenshot": uploaded_path,
-        "visual_diff_image": diff_path,
-        "font_differences": font_diffs,
-        "color_mismatches": color_diffs,
-        "spacing_issues": spacing_diffs
-    })
+        return JSONResponse(content={
+            "figma_data_preview": figma_data.get("name", "N/A"),
+            "page_screenshot": live_shot_path,
+            "uploaded_screenshot": uploaded_path,
+            "visual_diff_image": diff_path,
+            "font_differences": font_diffs,
+            "color_mismatches": color_diffs,
+            "spacing_issues": spacing_diffs
+        })
+
+    except Exception as e:
+        print("🔥 ERROR:", str(e))
+        return JSONResponse(status_code=500, content={"error": str(e)})
